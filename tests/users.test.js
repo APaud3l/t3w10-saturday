@@ -21,10 +21,13 @@ describe("Users route", () => {
         expect(response.body.data).toEqual(expect.arrayContaining(expectedUsers));
     });
 
-    test.skip("'Get user by ID' route returns a specific user only", async () => {
+    test("'Get user by ID' route returns a specific user only", async () => {
         // GET localhost:3300/users/:id
         let targetUserId = "1";
         const response = await request(app).get("/users/" + targetUserId);
+
+        expect(response.body.result.id).toBe(targetUserId);
+        expect(response.body.result.username).toBe("Username from DB");
     });
 
     test("'Create a new user' route returns the newly created user", async () => {
@@ -40,15 +43,43 @@ describe("Users route", () => {
         expect(response.body.password).toBe("EncryptedPassword");
     });
 
-    test.skip("'Login user' route returns a specific user only", async () => {
+    test("'Login user' route returns a specific user only", async () => {
         // POST localhost:3300/users/login
         const response = await request(app)
             .post("/users/login")
-            .send({
-                username: "Alice",
-                password: "abc123"
-            });
+            // Ideally, we would set the authorisation header to be set 
+            // by the value from JWT token
+            .set(
+                "Authorization", "Some header value" 
+            );
+            // .send({
+            //     username: "Alice",
+            //     password: "abc123"
+            // });
+
+        expect(response.body.authHeaderData).toBe("Some header value");
     });
+
+    test("'Login user' route throws an error when invalid login data is passed", async () => {
+        // POST localhost:3300/users/login
+        const response = await request(app)
+            .post("/users/login")
+            // Ideally, we would set the authorisation header to be set 
+            // by the value from JWT token
+            .set(
+                "Authorization", "Error header value" 
+            );
+            // .send({
+            //     username: "Alice",
+            //     password: "abc123"
+            // });
+
+        expect(response.body.authHeaderData).toBeUndefined();
+        expect(response.body.status).toBe(500);
+        expect(response.body.error).toBe("Not a valid login data");
+
+    });
+
     test.skip("'Update/Edit user' route returns a specific user only", async () => {
         // PUT/PATCH localhost:3300/users/:id
         let targetUserId = "1";
